@@ -7,7 +7,9 @@ Refine https://github.com/lifanchen-simm/transformerCPI/ for large dataset and m
 ### Training and testing
 First run 
 `sh script/generate_map.sh` to generate `protein_map.pkl` and `smiles_map.pkl`, which is the mapping from `smiles` to `smiles_feature`, and `protein_seq` to `protein_seq_feature`
+
 Then run `sh script/main.sh` to start training.
+
 If you want to stop the training process, run `sh script/stop.sh`
 
 ### Comparison to the orginal repo https://github.com/lifanchen-simm/transformerCPI
