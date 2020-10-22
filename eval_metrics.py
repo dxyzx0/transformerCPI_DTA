@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-# **********************************************************************
-# Created Time: 2019-05-06 16:34:10
-# File Name   : evaluation_metrics.py
-# Author      : Siyuan Dong
-# Mail        : dongsiyuan@dip-ai.com
-# Description :
-# **********************************************************************
 
 import copy
 import numpy as np
