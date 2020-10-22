@@ -96,6 +96,6 @@ def collate_fn(batch):
 
 if __name__ == "__main__":
     model = Word2Vec.load("word2vec_30.model")
-    dta_ds = DTADataset("data/input/converted_all_data_drop_RCX_PDB.csv", "data/output/smiles_map.pkl",
+    dta_ds = DTADataset("data/input/sample_input.csv", "data/output/smiles_map.pkl",
                         "data/output/protein_map.pkl", model)
     dataloader = DataLoader(dta_ds, batch_size=16, shuffle=True, num_workers=4, collate_fn=collate_fn)
