@@ -264,7 +264,7 @@ class Decoder(nn.Module):
 
 
 class Predictor(nn.Module):
-    def __init__(self, encoder, decoder, Loss=nn.MSELoss(), atom_dim=34):
+    def __init__(self, encoder, decoder, Loss=nn.MSELoss(reduction='mean'), atom_dim=34):
         super().__init__()
 
         self.encoder = encoder
@@ -310,7 +310,7 @@ class Predictor(nn.Module):
         # print("compound1_:", compound_mask.shape)
         # print("Protein1_:", protein_mask.shape)
         return compound_mask, protein_mask
-
+    @autocast()
     def forward(self, data):
         compound, adj, protein, correct_interaction, atom_num, protein_num = data
         # compound = [batch,atom_num, atom_dim]
@@ -384,23 +384,32 @@ class Trainer(object):
                 loss, _, _ = self.model(data_pack)
 
                 self.optimizer.zero_grad()
-                loss.sum().backward()
-                self.optimizer.step()
+                try:
+                    loss.backward(torch.ones_like(loss)/4)
+                    self.optimizer.step()
 
-                loss_train += loss.sum().item()
+                except RuntimeError as e:
+                    if 'out of memory' in str(e):
+                        print('| WARNING: ran out of GPU memory, skipping batch')
+                        torch.cuda.empty_cache()
+                    else:
+                        print(e)
+
+                loss_train += loss.detach().mean().item()
         else:
             for i, data_pack in enumerate(dataloader):
-                with autocast():
-                    loss, _, _ = self.model(data_pack)
+                data_pack = to_cuda(data_pack, device=device)
 
-                    self.optimizer.zero_grad()
-                    self.scaler.scale(loss.sum()).backward()
-                    self.scaler.step(self.optimizer)
-                    self.scaler.update()
+                loss, _, _ = self.model(data_pack)
 
-                    loss_train += loss.sum().item()
+                self.optimizer.zero_grad()
+                self.scaler.scale(loss.mean()).backward()
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
 
-        return loss.sum().item()
+                loss_train += loss.detach().mean().item()
+
+        return loss.detach().sum().item()
 
 
 class Tester(object):
@@ -427,7 +436,7 @@ class Tester(object):
             np.savetxt('plot.csv', [T_, S_], delimiter=',')
 
         try:
-            rmse = mean_squared_error(T_, S_)
+            rmse = mean_squared_error(T_, S_, squared=False)
             pear = pearson(T_, S_)
             spear = spearman(T_, S_)
             f1 = find_f1(T, S, threshold)
@@ -446,5 +455,5 @@ class Tester(object):
             f.write('\t'.join(map(str, AUCs)) + '\n')
 
     def save_model(self, model, filename):
-        torch.save(model.state_dict(), filename + ".state_dict")
+        torch.save(model.module.state_dict(), filename + ".state_dict")
         torch.save(model, filename + ".entire_model")

@@ -1,0 +1,3 @@
+#!/bin/sh
+python mol_featurizer.py
+
