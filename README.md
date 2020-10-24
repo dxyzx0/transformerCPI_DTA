@@ -14,7 +14,7 @@ If you want to stop the training process, run `sh script/stop.sh`
 
 ### Comparison to the orginal repo https://github.com/lifanchen-simm/transformerCPI
 Advantages:
-1. You can use `torch.nn.DataParallel` to accelerate your training process.
+1. You can use `torch.nn.DataParallel`(along with `torch.cuda.amp`) to accelerate your training process.
 2. For large scale dataset, Using `DTADataset` in `DataUtil.py` along with `torch.nn.DataLoader` can accelerate your data loading process and tremendously reduce the memory usage.
 3. I change the code into solving **regression** problem instead of **classification** problem in the original paper.
 
